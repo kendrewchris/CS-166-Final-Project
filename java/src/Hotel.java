@@ -299,12 +299,12 @@ public class Hotel {
                 switch (readChoice()){
                    case 1: viewHotels(esql); break;
                    case 2: viewRooms(esql); break;
-                   case 3: bookRooms(esql); break;
-                   case 4: viewRecentBookingsfromCustomer(esql); break;
+                   case 3: bookRooms(esql, authorisedUser); break;
+                   case 4: viewRecentBookingsfromCustomer(esql, authorisedUser); break;
                    case 5: updateRoomInfo(esql); break;
                    case 6: viewRecentUpdates(esql); break;
                    case 7: viewBookingHistoryofHotel(esql); break;
-                   case 8: viewRegularCustomers(esql); break;
+                   case 8: viewRegularCustomers(esql, authorisedUser); break;
                    case 9: placeRoomRepairRequests(esql); break;
                    case 10: viewRoomRepairHistory(esql); break;
                    case 20: usermenu = false; break;
@@ -443,7 +443,7 @@ public class Hotel {
          System.err.println(e.getMessage ());
       }
    }
-   public static void bookRooms(Hotel esql) {
+   public static void bookRooms(Hotel esql, String authorisedUser) {
       try{
          System.out.print("\tEnter hotel ID: ");
          String hid = in.readLine();
@@ -459,13 +459,12 @@ public class Hotel {
          " THEN 'Not Available' ELSE 'Available' END AS availability FROM Rooms;";
 
          List<List<String>> result = esql.executeQueryAndReturnResult(query);
-         System.out.print(result.get(0).get(0));
          String temp = result.get(0).get(0).replaceAll("\\s", "");
 
-         if(temp == "NotAvailable"){
+         if(temp.equals("NotAvailable")){
             System.out.print("Unfortunately the room you searched for is not available on "
             + rdate + "\n");
-         }else{
+         }else if(temp.equals("Available")){
             System.out.print("The room you searched for is available on "+ rdate + "\n");
             query = "SELECT r.price FROM Rooms r WHERE r.hotelID = " + hid + " AND r.roomNumber = " +
             rid + ";";
@@ -474,18 +473,59 @@ public class Hotel {
             System.out.print("Would you like to book the room for " + price + "? (y/n)\n");
             if(in.readLine() == "y"){
                query = "INSERT INTO RoomBookings (customerID, hotelID, roomNumber, bookingDate) VALUES (" + 
-               "222" + "," + hid + "," + rid + ",\'" + rdate + "/')";
+               authorisedUser + "," + hid + "," + rid + ",\'" + rdate + "/')";
+               int yur = esql.executeQuery(query);
             }
          }
       }catch(Exception e){
          System.err.println(e.getMessage());
       }
    }
-   public static void viewRecentBookingsfromCustomer(Hotel esql) {}
+   public static void viewRecentBookingsfromCustomer(Hotel esql, String authorisedUser){
+      try{
+         String query = "SELECT * FROM RoomBookings WHERE customerID = " + authorisedUser +
+         " ORDER BY bookingID DESC LIMIT 5;";
+         List<List<String>> result = esql.executeQueryAndReturnResult(query);
+         System.out.print("Last 5 Bookings: \n");
+         for (int i = 0; i < result.size(); i++) {
+            System.out.print(result.get(i).get(0));
+         }
+      }catch(Exception e){
+         System.err.println(e.getMessage());
+      }
+   }
    public static void updateRoomInfo(Hotel esql) {}
    public static void viewRecentUpdates(Hotel esql) {}
    public static void viewBookingHistoryofHotel(Hotel esql) {}
-   public static void viewRegularCustomers(Hotel esql) {}
+   public static void viewRegularCustomers(Hotel esql, String authorisedUser){
+      try{
+         String query = "SELECT u.userType FROM Users u WHERE u.userID = " + authorisedUser + ";";
+         List<List<String>> result = esql.executeQueryAndReturnResult(query);
+         String temp = result.get(0).get(0).replaceAll("\\s", "");
+         if(temp.equals("manager")){
+            System.out.print("Enter Hotel ID: ");
+            String hid = in.readLine().replaceAll("\\s", "");
+            
+            query = "SELECT u.userType FROM Users u INNER JOIN Hotel h ON h.managerUserID = u.userID " +
+            "WHERE u.userID = " + authorisedUser + "AND h.hotelID = " + hid + ";";
+            result = esql.executeQueryAndReturnResult(query);
+            temp = result.get(0).get(0).replaceAll("\\s", "");
+               if(temp.equals("manager")){
+                  query = "SELECT b.customerID, COUNT(b.bookingID) AS numBookings " +
+                  "FROM RoomBookings b INNER JOIN Rooms r ON b.roomNumber = r.roomNumber " +
+                  "WHERE r.hotelID = " + hid + "GROUP BY b.customerID ORDER BY numBookings DESC " +
+                  "LIMIT 5;";
+                  result = esql.executeQueryAndReturnResult(query);
+                  for (int i = 0; i < result.size(); i++) {
+                     //
+                     System.out.print(result.get(i) + "\n");
+                  }
+               }
+         }
+      }catch(Exception e){
+         System.err.println(e.getMessage ());
+      }
+   }
    public static void placeRoomRepairRequests(Hotel esql) {}
    public static void viewRoomRepairHistory(Hotel esql) {}
 
