@@ -403,25 +403,84 @@ public class Hotel {
    public static void viewHotels(Hotel esql) {
       try{
          System.out.print("\tEnter latitude: ");
-         int latitude = Integer.parseInt(in.readLine());
+         double userLat = Double.parseDouble(in.readLine());
          System.out.print("\tEnter longitude: ");
-         int longitude = Integer.parseInt(in.readLine());
+         double userLong = Double.parseDouble(in.readLine());
 			String query = "SELECT h.hotelName, h.latitude, h.longitude FROM Hotel h;";
          List<List<String>> result = esql.executeQueryAndReturnResult(query);
 
          System.out.print("\tHotels within 30 units: \n");
          for (int i = 0; i < result.size(); i++) {
-            double tempDistance = calculateDistance(Integer.parseInt(result.get(i).get(1)), Integer.parseInt(result.get(i).get(2)), latitude, longitude);
+            double tempDistance = esql.calculateDistance(Double.parseDouble(result.get(i).get(1)), Double.parseDouble(result.get(i).get(2)), userLat, userLong);
             if(tempDistance < 30){
-               System.out.print(result.get(i).get(1) + "\n");
+               System.out.print(result.get(i).get(0) + "\n");
             }
         }
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println(e.getMessage ());
       }
    }
-   public static void viewRooms(Hotel esql) {}
-   public static void bookRooms(Hotel esql) {}
+   public static void viewRooms(Hotel esql) {
+      try{
+         System.out.print("\tEnter hotel ID: ");
+         String hid = in.readLine();
+         System.out.print("\tEnter date: ");
+         String hdate = in.readLine();
+
+         String query = "SELECT r.roomNumber, r.price, CASE WHEN EXISTS (SELECT * FROM RoomBookings WHERE hotelID = " +
+         hid + " AND roomNumber = r.roomNumber AND bookingDate = \'" + hdate +
+         "\') THEN 'Not Available' ELSE 'Available' END AS availability FROM Rooms r WHERE r.hotelID = " + hid +
+         ";";
+
+
+         List<List<String>> result = esql.executeQueryAndReturnResult(query);
+
+         System.out.print("\tRooms: \n");
+         for (int i = 0; i < result.size(); i++) {
+            System.out.print(result.get(i).get(0) + " " + result.get(i).get(1) + "\n");
+        }
+      }catch(Exception e){
+         System.err.println(e.getMessage ());
+      }
+   }
+   public static void bookRooms(Hotel esql) {
+      try{
+         System.out.print("\tEnter hotel ID: ");
+         String hid = in.readLine();
+
+         System.out.print("\tEnter room ID: ");
+         String rid = in.readLine();
+
+         System.out.print("\tEnter date: ");
+         String rdate = in.readLine();
+
+         String query = "SELECT CASE WHEN EXISTS (SELECT * FROM RoomBookings WHERE hotelID = " + hid +
+         " AND roomNumber = " + rid + " AND bookingDate = \'" + rdate + "\')" +
+         " THEN 'Not Available' ELSE 'Available' END AS availability FROM Rooms;";
+
+         List<List<String>> result = esql.executeQueryAndReturnResult(query);
+         System.out.print(result.get(0).get(0));
+         String temp = result.get(0).get(0).replaceAll("\\s", "");
+
+         if(temp == "NotAvailable"){
+            System.out.print("Unfortunately the room you searched for is not available on "
+            + rdate + "\n");
+         }else{
+            System.out.print("The room you searched for is available on "+ rdate + "\n");
+            query = "SELECT r.price FROM Rooms r WHERE r.hotelID = " + hid + " AND r.roomNumber = " +
+            rid + ";";
+            result = esql.executeQueryAndReturnResult(query);
+            String price = result.get(0).get(0);
+            System.out.print("Would you like to book the room for " + price + "? (y/n)\n");
+            if(in.readLine() == "y"){
+               query = "INSERT INTO RoomBookings (customerID, hotelID, roomNumber, bookingDate) VALUES (" + 
+               "222" + "," + hid + "," + rid + ",\'" + rdate + "/')";
+            }
+         }
+      }catch(Exception e){
+         System.err.println(e.getMessage());
+      }
+   }
    public static void viewRecentBookingsfromCustomer(Hotel esql) {}
    public static void updateRoomInfo(Hotel esql) {}
    public static void viewRecentUpdates(Hotel esql) {}
