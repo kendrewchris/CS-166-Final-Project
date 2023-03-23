@@ -302,8 +302,8 @@ public class Hotel {
                    case 3: bookRooms(esql, authorisedUser); break;
                    case 4: viewRecentBookingsfromCustomer(esql, authorisedUser); break;
                    case 5: updateRoomInfo(esql); break;
-                   case 6: viewRecentUpdates(esql); break;
-                   case 7: viewBookingHistoryofHotel(esql); break;
+                   case 6: viewRecentUpdates(esql, authorisedUser); break;
+                   case 7: viewBookingHistoryofHotel(esql, authorisedUser); break;
                    case 8: viewRegularCustomers(esql, authorisedUser); break;
                    case 9: placeRoomRepairRequests(esql); break;
                    case 10: viewRoomRepairHistory(esql); break;
@@ -494,8 +494,80 @@ public class Hotel {
          System.err.println(e.getMessage());
       }
    }
-   public static void updateRoomInfo(Hotel esql) {}
-   public static void viewRecentUpdates(Hotel esql) {}
+   public static void updateRoomInfo(Hotel esql, String authorisedUser)
+   {
+   	try{
+		
+         String query = String.format("SELECT * FROM USERS WHERE userID = '%s' AND userType = 'manager'", authorisedUser);
+         int userNum = esql.executeQuery(query);
+         
+         if (userNum == 0){
+			System.out.println("\tYou are not a Manager.");
+			return;
+		}// If manager, continue
+		
+		 System.out.print("\tEnter hotel ID: ");
+         String hotelID = in.readLine();
+         
+         query = String.format("SELECT * FROM Hotel WHERE hotelID = '%s' AND managerUserID = '%s'", hotelID, authorisedUser);
+         userNum = esql.executeQuery(query);
+         if (userNum == 0){
+			System.out.println("\tYou don't manage this Hotel.");
+			return;
+		}//If manager, continue
+		
+         boolean keepon = true;
+         while(keepon){
+			 System.out.print("\tEnter room number: ");
+			 String roomNum = in.readLine();
+			 System.out.println("UPDATE ROOM");
+			 System.out.println("---------");
+			 System.out.println("1. Price");
+			 System.out.println("2. Image URL");
+			 System.out.println("9. < DONE");
+			switch(readChoice()){
+				case 1: 
+					System.out.print("\tUpdate price to: ");
+					String price = in.readLine();
+					query = String.format("UPDATE Rooms SET price = '%s' WHERE hotelID = '%s' AND roomNumber = '%s'", price, hotelID, roomNum);
+					esql.executeUpdate(query);
+					break;
+				case 2:
+					System.out.print("\tUpdate image URL to: ");
+					String imageURL = in.readLine();
+					query = String.format("UPDATE Rooms SET imageURL = '%s' WHERE hotelID = '%s' AND roomNumber = '%s'", imageURL, hotelID, roomNum);
+					esql.executeUpdate(query);
+					break;
+				case 9:
+					keepon = false;
+					break;
+			}
+		 }
+		
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+      }
+   }
+   public static void viewRecentUpdates(Hotel esql, String authorisedUser)
+   {
+	   try{
+		
+         String query = String.format("SELECT * FROM USERS WHERE userID = '%s' AND userType = 'manager'", authorisedUser);
+         int userNum = esql.executeQuery(query);
+         
+         if (userNum == 0){
+			System.out.println("\tYou are not a Manager.");
+			return;
+		}// If manager, continue
+		
+		System.out.println("\tRecent Updates: ");
+		query = String.format("SELECT * FROM RoomUpdatesLog WHERE managerID = '%s' ORDER BY bookingDate DESC LIMIT 5", authorisedUser);
+		esql.executeQueryAndPrintResult(query);
+		
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+      }
+   }
    public static void viewBookingHistoryofHotel(Hotel esql) {}
    public static void viewRegularCustomers(Hotel esql, String authorisedUser){
       try{
