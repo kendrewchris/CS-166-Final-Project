@@ -301,12 +301,12 @@ public class Hotel {
                    case 2: viewRooms(esql); break;
                    case 3: bookRooms(esql, authorisedUser); break;
                    case 4: viewRecentBookingsfromCustomer(esql, authorisedUser); break;
-                   case 5: updateRoomInfo(esql); break;
+                   case 5: updateRoomInfo(esql, authorisedUser); break;
                    case 6: viewRecentUpdates(esql, authorisedUser); break;
                    case 7: viewBookingHistoryofHotel(esql, authorisedUser); break;
                    case 8: viewRegularCustomers(esql, authorisedUser); break;
                    case 9: placeRoomRepairRequests(esql); break;
-                   case 10: viewRoomRepairHistory(esql); break;
+                   case 10: viewRoomRepairHistory(esql, authorisedUser); break;
                    case 20: usermenu = false; break;
                    default : System.out.println("Unrecognized choice!"); break;
                 }
@@ -561,14 +561,24 @@ public class Hotel {
 		}// If manager, continue
 		
 		System.out.println("\tRecent Updates: ");
-		query = String.format("SELECT * FROM RoomUpdatesLog WHERE managerID = '%s' ORDER BY bookingDate DESC LIMIT 5", authorisedUser);
+		query = String.format("SELECT * FROM RoomUpdatesLog WHERE managerID = '%s' ORDER BY updatedOn DESC LIMIT 5", authorisedUser);
 		esql.executeQueryAndPrintResult(query);
 		
       }catch(Exception e){
          System.err.println (e.getMessage ());
       }
    }
-   public static void viewBookingHistoryofHotel(Hotel esql) {}
+   public static void viewBookingHistoryofHotel(Hotel esql, String authorisedUser) {
+	   try{
+		
+		System.out.println("\tBooking History: ");
+		String query = String.format("SELECT hotelID, roomNumber, bookingDate FROM RoomBookings WHERE customerID = '%s' ORDER BY bookingDate DESC LIMIT 5", authorisedUser);
+		esql.executeQueryAndPrintResult(query);
+		
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+      }
+      }
    public static void viewRegularCustomers(Hotel esql, String authorisedUser){
       try{
          String query = "SELECT u.userType FROM Users u WHERE u.userID = " + authorisedUser + ";";
@@ -599,7 +609,25 @@ public class Hotel {
       }
    }
    public static void placeRoomRepairRequests(Hotel esql) {}
-   public static void viewRoomRepairHistory(Hotel esql) {}
+   public static void viewRoomRepairHistory(Hotel esql, String authorisedUser) {
+	   
+	   try{
+		
+         String query = String.format("SELECT * FROM USERS WHERE userID = '%s' AND userType = 'manager'", authorisedUser);
+         int userNum = esql.executeQuery(query);
+         
+         if (userNum == 0){
+			System.out.println("\tYou are not a Manager.");
+			return;
+		}// If manager, continue
+		
+		System.out.println("\tRoom Repairs: ");
+		query = String.format("SELECT det.companyID, det.hotelID, det.roomNumber, det.repairDate FROM RoomRepairRequests list, RoomRepairs det WHERE list.managerID = '%s' AND list.repairID = det.repairID", authorisedUser);
+		esql.executeQueryAndPrintResult(query);
+		
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+      }
+	   }
 
 }//end Hotel
-
