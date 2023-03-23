@@ -301,7 +301,7 @@ public class Hotel {
                    case 2: viewRooms(esql); break;
                    case 3: bookRooms(esql, authorisedUser); break;
                    case 4: viewRecentBookingsfromCustomer(esql, authorisedUser); break;
-                   case 5: updateRoomInfo(esql); break;
+                   case 5: updateRoomInfo(esql, authorisedUser); break;
                    case 6: viewRecentUpdates(esql, authorisedUser); break;
                    case 7: viewBookingHistoryofHotel(esql, authorisedUser); break;
                    case 8: viewRegularCustomers(esql, authorisedUser); break;
@@ -561,14 +561,24 @@ public class Hotel {
 		}// If manager, continue
 		
 		System.out.println("\tRecent Updates: ");
-		query = String.format("SELECT * FROM RoomUpdatesLog WHERE managerID = '%s' ORDER BY bookingDate DESC LIMIT 5", authorisedUser);
+		query = String.format("SELECT * FROM RoomUpdatesLog WHERE managerID = '%s' ORDER BY updatedOn DESC LIMIT 5", authorisedUser);
 		esql.executeQueryAndPrintResult(query);
 		
       }catch(Exception e){
          System.err.println (e.getMessage ());
       }
    }
-   public static void viewBookingHistoryofHotel(Hotel esql) {}
+   public static void viewBookingHistoryofHotel(Hotel esql, String authorisedUser) {
+	   try{
+		
+		System.out.println("\tBooking History: ");
+		String query = String.format("SELECT hotelID, roomNumber, bookingDate FROM RoomBookings WHERE customerID = '%s' ORDER BY bookingDate DESC LIMIT 5", authorisedUser);
+		esql.executeQueryAndPrintResult(query);
+		
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+      }
+      }
    public static void viewRegularCustomers(Hotel esql, String authorisedUser){
       try{
          String query = "SELECT u.userType FROM Users u WHERE u.userID = " + authorisedUser + ";";
@@ -602,4 +612,3 @@ public class Hotel {
    public static void viewRoomRepairHistory(Hotel esql) {}
 
 }//end Hotel
-
